@@ -1,0 +1,7 @@
+# 200 MB raw disk image — exceeds GitHub's 100 MB file limit.
+# Integrity is preserved via tsk_lab/evidence.dd.sha256 (and the report).
+tsk_lab/evidence.dd
+
+# OS / editor cruft
+.DS_Store
+*~

@@ -1,10 +1,10 @@
-# SWS405 — Lab 4 Submission Report
+# SWS405 - Lab 4 Submission Report
 ## The Sleuth Kit: Create, Delete and Recover Digital Evidence
 
 | | |
 |---|---|
-| **Course** | SWS405 — Digital Forensics |
-| **Lab** | Lab 4 — The Sleuth Kit Hands-On |
+| **Course** | SWS405 - Digital Forensics |
+| **Lab** | Lab 4 - The Sleuth Kit Hands-On |
 | **Student name** | Kinley Palden |
 | **Student ID** | 02230287 |
 | **Instructor** | Mr. Pema Thinley |
@@ -15,7 +15,7 @@
 
 ## 1. Objective
 
-Build a 200 MB NTFS disk image, plant eight files of different types plus one control file, delete them, and then recover every deleted file using The Sleuth Kit (TSK) — proving each recovery is bit-for-bit identical to the original with SHA-256 hashes, and proving the evidence image itself was never modified during analysis.
+Build a 200 MB NTFS disk image, plant eight files of different types plus one control file, delete them, and then recover every deleted file using The Sleuth Kit (TSK) - proving each recovery is bit-for-bit identical to the original with SHA-256 hashes, and proving the evidence image itself was never modified during analysis.
 
 ## 2. Scenario
 
@@ -47,9 +47,9 @@ The lab was carried out in two roles, following forensic best practice:
 | MFT entry of `report.pdf` | **67** | `fls` |
 | `report.pdf` created time | 2026-10-14 02:06:13 (+06) = 2026-10-13 20:06:13 UTC | `istat` |
 | `report.pdf` data cluster | **25984** (non-resident, 4030 bytes) | `istat` |
-| Files recovered / hashes matching | **8 / 8 — all OK** | `icat`, `sha256sum -c` |
+| Files recovered / hashes matching | **8 / 8 - all OK** | `icat`, `sha256sum -c` |
 | Time the `Confidential` folder was emptied | 2026-10-13 20:07:55 UTC (≈ 1 min 42 s after creation) | `mactime` |
-| Image SHA-256 (after analysis) matches? | **YES — `evidence.dd: OK`** | `sha256sum -c` |
+| Image SHA-256 (after analysis) matches? | **YES - `evidence.dd: OK`** | `sha256sum -c` |
 
 ---
 
@@ -64,7 +64,7 @@ The acquisition hash and the post-analysis hash are **identical**, proving every
 
 ---
 
-## 6. Findings — Deleted Files Identified
+## 6. Findings - Deleted Files Identified
 
 `fls -r -d -p -o 2048 evidence.dd` recovered the names and MFT (metadata) addresses of all eight deleted files and the deleted `Confidential` folder:
 
@@ -82,7 +82,7 @@ The acquisition hash and the post-analysis hash are **identical**, proving every
 
 The control file `readme.txt` (MFT entry 73) remained **allocated** (not deleted), as expected.
 
-**Resident vs non-resident (from `istat`):** the small 72-byte `secret.txt` was stored *resident* — entirely inside its 1024-byte MFT record, with no external clusters. `report.pdf` (4030 bytes) was too large and was stored *non-resident* in data cluster 25984, which `blkcat` confirmed still began with the `%PDF-1.4` signature even after deletion. This is why deleted-file recovery is possible: NTFS deletion only marks the MFT entry and clusters as free; the bytes remain until overwritten.
+**Resident vs non-resident (from `istat`):** the small 72-byte `secret.txt` was stored *resident* - entirely inside its 1024-byte MFT record, with no external clusters. `report.pdf` (4030 bytes) was too large and was stored *non-resident* in data cluster 25984, which `blkcat` confirmed still began with the `%PDF-1.4` signature even after deletion. This is why deleted-file recovery is possible: NTFS deletion only marks the MFT entry and clusters as free; the bytes remain until overwritten.
 
 ---
 
@@ -90,7 +90,7 @@ The control file `readme.txt` (MFT entry 73) remained **allocated** (not deleted
 
 All eight files were recovered individually with `icat -r` and in bulk with `tsk_recover` (which rebuilt the folder tree, including `Confidential/`). Recovered file types were confirmed by content with `file`, matching the originals.
 
-**Hash verification (`sha256sum -c`): 8 of 8 recovered files matched the originals — all OK.**
+**Hash verification (`sha256sum -c`): 8 of 8 recovered files matched the originals - all OK.**
 
 | File | Original SHA-256 | Recovered matches? |
 |---|---|---|
@@ -114,8 +114,8 @@ A MACB timeline was produced with `fls -r -m / -o 2048 evidence.dd > bodyfile.tx
 | Time (UTC) | Event |
 |---|---|
 | 2026-10-13 20:06:13 | All nine files **created** (`...b` born) and written (`m...`) |
-| 2026-10-13 20:06:42 | All files **accessed** (`.a..`) — the hashing step before deletion |
-| 2026-10-13 20:07:55 | `Confidential` folder **modified/changed** (`m.c.`) — the moment its contents were deleted, ≈ 1 min 42 s after creation |
+| 2026-10-13 20:06:42 | All files **accessed** (`.a..`) - the hashing step before deletion |
+| 2026-10-13 20:07:55 | `Confidential` folder **modified/changed** (`m.c.`) - the moment its contents were deleted, ≈ 1 min 42 s after creation |
 
 The Type column (`m`=modified, `a`=accessed, `c`=MFT changed, `b`=born) lets an investigator reconstruct the sequence: files created → read → deleted. The later `Confidential (deleted)` entry pinpoints when the suspect emptied the folder.
 
@@ -124,19 +124,19 @@ The Type column (`m`=modified, `a`=accessed, `c`=MFT changed, `b`=born) lets an 
 ## 9. Review Questions
 
 **1. Why does `fsstat evidence.dd` fail without `-o`, and where does 2048 come from?**
-Sector 0 holds the MBR partition table, not a file system, so TSK cannot determine a file-system type there. The value 2048 is the partition **Start sector** reported by `mmls` — it comes from the 1 MiB alignment gap (1 MiB ÷ 512 bytes = sector 2048). Every file-system command therefore needs `-o 2048`.
+Sector 0 holds the MBR partition table, not a file system, so TSK cannot determine a file-system type there. The value 2048 is the partition **Start sector** reported by `mmls` - it comes from the 1 MiB alignment gap (1 MiB ÷ 512 bytes = sector 2048). Every file-system command therefore needs `-o 2048`.
 
 **2. What do the `*` and `-/r` mean in `-/r * 67-128-2: report.pdf`?**
 The `*` marks the entry as **deleted** (unallocated). `-/r` is "directory-entry type / MFT-entry type": `-` means the deleted directory entry no longer records the type, `r` means the MFT entry says it is a **regular file**. `67` is the MFT address; `128-2` is the `$DATA` attribute (type 128) with id 2.
 
-**3. `secret.txt` is resident and `report.pdf` is non-resident — what is the difference, and how did `istat` show it?**
+**3. `secret.txt` is resident and `report.pdf` is non-resident - what is the difference, and how did `istat` show it?**
 A **resident** file's data is stored inside its own 1024-byte MFT record (used for small files); a **non-resident** file's data is stored in separate disk clusters because it is too large. `istat` showed `Type: $DATA … Resident size: 72` for `secret.txt`, versus `Type: $DATA … Non-Resident size: 4030` plus a cluster number (25984) for `report.pdf`.
 
 **4. How could `icat` recover the files without knowing their names?**
-`icat` works from the **MFT entry number** (metadata address), which points directly to the file's data runs (its cluster list). The filename is only needed to choose the *output* file name — those names came from `fls`. Metadata, not the name, locates the content.
+`icat` works from the **MFT entry number** (metadata address), which points directly to the file's data runs (its cluster list). The filename is only needed to choose the *output* file name - those names came from `fls`. Metadata, not the name, locates the content.
 
 **5. Why compare SHA-256 hashes instead of just opening the recovered files?**
-A file can open and look correct while individual bytes are altered. A matching SHA-256 hash proves the recovered file is **bit-for-bit identical** to the original — an objective, tamper-evident standard of proof required in forensics.
+A file can open and look correct while individual bytes are altered. A matching SHA-256 hash proves the recovered file is **bit-for-bit identical** to the original - an objective, tamper-evident standard of proof required in forensics.
 
 **6. Give two reasons a deleted file might not be recoverable on a real, in-use drive.**
 (a) Its freed **clusters were overwritten** by newer data, destroying the content. (b) Its **MFT entry was reused** by a new file, so the name and data-run pointers are lost. (Additionally, SSDs with TRIM may physically erase freed blocks automatically.)
@@ -152,88 +152,88 @@ The lab objectives were fully met. An NTFS evidence image was created, eight fil
 
 ---
 
-## Appendix A — Attached Files
+## Appendix A - Attached Files
 
 Submitted alongside this report (in `tsk_lab/`):
 
-- `original_hashes.txt` — SHA-256 of the 8 files before deletion (ground truth)
-- `recovered_hashes.txt` — SHA-256 of the 8 recovered files
-- `timeline.csv` — the MACB timeline
-- `evidence.dd.sha256` — acquisition hash of the image
-- `make_files.py` — the sample-file generator used in Part 3
-- `recovered/` — files recovered individually with `icat`
-- `tsk_recovered/` — files recovered in bulk with `tsk_recover` (folder tree preserved)
+- `original_hashes.txt` - SHA-256 of the 8 files before deletion (ground truth)
+- `recovered_hashes.txt` - SHA-256 of the 8 recovered files
+- `timeline.csv` - the MACB timeline
+- `evidence.dd.sha256` - acquisition hash of the image
+- `make_files.py` - the sample-file generator used in Part 3
+- `recovered/` - files recovered individually with `icat`
+- `tsk_recovered/` - files recovered in bulk with `tsk_recover` (folder tree preserved)
 
-## Appendix B — Screenshots
+## Appendix B - Screenshots
 
 Screenshots captured during the lab, grouped by part (see `SCREENSHOT_GUIDE.md` for what each must show).
 
-### Part 1 — Install and verify The Sleuth Kit
-![Step 1 — TSK installed and verified](screenshots/p1.png)
-*Step 1 — TSK installed and verified (`mmls -V` and tool paths)*
+### Part 1 - Install and verify The Sleuth Kit
+![Step 1 - TSK installed and verified](screenshots/p1.png)
+*Step 1 - TSK installed and verified (`mmls -V` and tool paths)*
 
-### Part 2 — Build the evidence image
+### Part 2 - Build the evidence image
 ![Step 2.1](screenshots/2.1.png)
-*Step 2.1 — Blank 200 MiB image created with `dd`*
+*Step 2.1 - Blank 200 MiB image created with `dd`*
 
 ![Step 2.2](screenshots/2.2.png)
-*Step 2.2 — Partition table written; partition Start = 2048s*
+*Step 2.2 - Partition table written; partition Start = 2048s*
 
 ![Steps 2.3–2.5](screenshots/2.3-2.5.png)
-*Steps 2.3–2.5 — Loop device attached, NTFS formatted, partition mounted*
+*Steps 2.3–2.5 - Loop device attached, NTFS formatted, partition mounted*
 
-### Part 3 — Plant files and hash them
+### Part 3 - Plant files and hash them
 ![Step 3.1](screenshots/3.1.png)
-*Step 3.1 — Generator script `make_files.py` created*
+*Step 3.1 - Generator script `make_files.py` created*
 
 ![Step 3.2](screenshots/3.2.png)
-*Step 3.2 — Nine files planted (`ls -laR /mnt/evidence`)*
+*Step 3.2 - Nine files planted (`ls -laR /mnt/evidence`)*
 
 ![Step 3.3](screenshots/3.3.png)
-*Step 3.3 — File types confirmed by content (`file`)*
+*Step 3.3 - File types confirmed by content (`file`)*
 
 ![Step 3.4](screenshots/3.4.png)
-*Step 3.4 — Original SHA-256 hashes recorded*
+*Step 3.4 - Original SHA-256 hashes recorded*
 
-### Part 4 — Delete the files and seal the image
+### Part 4 - Delete the files and seal the image
 ![Step 4.1](screenshots/4.1.png)
-*Step 4.1 — Files deleted; only `readme.txt` remains*
+*Step 4.1 - Files deleted; only `readme.txt` remains*
 
 ![Steps 4.2–4.4](screenshots/4.2-4.4.png)
-*Steps 4.2–4.4 — Unmounted, acquisition hash taken, image set read-only*
+*Steps 4.2–4.4 - Unmounted, acquisition hash taken, image set read-only*
 
-### Part 5 — Investigate the image with TSK
+### Part 5 - Investigate the image with TSK
 ![Steps 5.1–5.3](screenshots/5.1-5.3.png)
-*Steps 5.1–5.3 — Integrity OK, `img_stat`, `mmls` (Start 2048)*
+*Steps 5.1–5.3 - Integrity OK, `img_stat`, `mmls` (Start 2048)*
 
 ![Steps 5.4–5.5](screenshots/5.4-5.5.png)
-*Steps 5.4–5.5 — `fsstat`: NTFS, volume EVIDENCE, cluster 4096, MFT range 0–74*
+*Steps 5.4–5.5 - `fsstat`: NTFS, volume EVIDENCE, cluster 4096, MFT range 0–74*
 
 ![Steps 5.6–5.7](screenshots/5.6-5.7.png)
-*Steps 5.6–5.7 — `fls`: deleted files found with MFT entries 65–72*
+*Steps 5.6–5.7 - `fls`: deleted files found with MFT entries 65–72*
 
 ![Step 5.8](screenshots/5.8.png)
-*Step 5.8 — `istat`: report.pdf non-resident (cluster 25984), secret.txt resident*
+*Step 5.8 - `istat`: report.pdf non-resident (cluster 25984), secret.txt resident*
 
-### Part 6 — Recover every deleted file and verify
+### Part 6 - Recover every deleted file and verify
 ![Steps 6.1–6.2](screenshots/6.1-6.2.png)
-*Steps 6.1–6.2 — `icat` reads secret.txt; `blkcat` shows `%PDF-1.4` in the raw cluster*
+*Steps 6.1–6.2 - `icat` reads secret.txt; `blkcat` shows `%PDF-1.4` in the raw cluster*
 
 ![Steps 6.3–6.4](screenshots/6.3-6.4.png)
-*Steps 6.3–6.4 — All 8 files recovered with `icat` (sizes match originals)*
+*Steps 6.3–6.4 - All 8 files recovered with `icat` (sizes match originals)*
 
 ![Step 6.5](screenshots/6.5.png)
-*Step 6.5 — Recovered file types confirmed with `file`*
+*Step 6.5 - Recovered file types confirmed with `file`*
 
 ![Step 6.6](screenshots/6.6.png)
-*Step 6.6 — ⭐ `sha256sum -c`: 8 of 8 recovered files OK*
+*Step 6.6 - ⭐ `sha256sum -c`: 8 of 8 recovered files OK*
 
-### Part 7 — Bulk recovery, timeline and final integrity
+### Part 7 - Bulk recovery, timeline and final integrity
 ![Step 7.1](screenshots/7.1.png)
-*Step 7.1 — `tsk_recover`: 8 files recovered, folder tree rebuilt*
+*Step 7.1 - `tsk_recover`: 8 files recovered, folder tree rebuilt*
 
 ![Step 7.2](screenshots/7.2.png)
-*Step 7.2 — MACB timeline (`fls -m` + `mactime`)*
+*Step 7.2 - MACB timeline (`fls -m` + `mactime`)*
 
 ![Step 7.3](screenshots/7.3.png)
-*Step 7.3 — ⭐ Final `sha256sum -c`: evidence.dd OK (image unaltered)*
+*Step 7.3 - ⭐ Final `sha256sum -c`: evidence.dd OK (image unaltered)*

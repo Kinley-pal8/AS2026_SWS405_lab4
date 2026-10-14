@@ -1,8 +1,8 @@
-# SWS405 — Lab 4: The Sleuth Kit (Create, Delete & Recover Evidence)
+# SWS405 - Lab 4: The Sleuth Kit (Create, Delete & Recover Evidence)
 
 Digital-forensics lab for **SWS405**. A 200 MB NTFS disk image is built, eight
 files of different types are planted and then deleted, and every file is
-recovered with [The Sleuth Kit](https://www.sleuthkit.org/) (TSK) — each
+recovered with [The Sleuth Kit](https://www.sleuthkit.org/) (TSK) - each
 recovery proven **bit-for-bit identical** to the original with SHA-256 hashes,
 and the evidence image proven **unaltered** by a final hash check.
 
@@ -23,11 +23,11 @@ files are unaltered.
 
 ## Results at a glance
 
-- **8 / 8** deleted files recovered — all SHA-256 hashes **OK**
+- **8 / 8** deleted files recovered - all SHA-256 hashes **OK**
 - Partition found at sector **2048**; NTFS volume **EVIDENCE** (cluster 4096, MFT range 0–74)
 - `report.pdf` → MFT entry **67**, non-resident in cluster **25984**; `secret.txt` → resident
 - Timeline reconstructed (MACB): files created → read → `Confidential` folder emptied
-- Final integrity check: `evidence.dd: OK` — the image was only ever read, never modified
+- Final integrity check: `evidence.dd: OK` - the image was only ever read, never modified
 
 ## Repository structure
 
@@ -49,7 +49,7 @@ files are unaltered.
     └── tsk_recovered/          Files recovered in bulk with tsk_recover (folder tree preserved)
 ```
 
-> **Note:** the 200 MB raw image `tsk_lab/evidence.dd` is **not** committed — it
+> **Note:** the 200 MB raw image `tsk_lab/evidence.dd` is **not** committed - it
 > exceeds GitHub's 100 MB file limit. Its integrity is preserved by
 > `tsk_lab/evidence.dd.sha256`, and it can be rebuilt by following the lab steps.
 
@@ -57,10 +57,10 @@ files are unaltered.
 
 The lab is split into two roles, following forensic best practice:
 
-1. **Suspect role (Parts 2–4)** — build `evidence.dd`, partition + format NTFS,
+1. **Suspect role (Parts 2–4)** - build `evidence.dd`, partition + format NTFS,
    mount, plant files (`make_files.py`), record original hashes, delete all but
    `readme.txt`, unmount, hash the image and set it read-only.
-2. **Investigator role (Parts 5–7)** — working **read-only**: verify the
+2. **Investigator role (Parts 5–7)** - working **read-only**: verify the
    acquisition hash, locate the partition (`mmls`) and file system (`fsstat`),
    list deleted files and MFT entries (`fls`), inspect metadata (`istat`),
    recover with `icat -r` and `tsk_recover`, verify with `sha256sum -c`, build a

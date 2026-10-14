@@ -40,7 +40,7 @@ In this lab you build your own 200 MB NTFS disk image, plant 8 files of differen
 
 TSK is often already present on Kali (it ships with Autopsy), but installing it is safe either way: apt simply reports that it is up to date.
 
-**Step 1.1 — Update the package list and install the tools.** Open a terminal and run:
+**Step 1.1 - Update the package list and install the tools.** Open a terminal and run:
 
 ```bash
 sudo apt update
@@ -53,7 +53,7 @@ sudo apt install -y sleuthkit ntfs-3g parted file python3
 
 **Expected outcome:** apt finishes with lines such as `Setting up sleuthkit (4.12.1...)`, or reports `sleuthkit is already the newest version`.
 
-**Step 1.2 — Verify the installation.**
+**Step 1.2 - Verify the installation.**
 
 ```bash
 mmls -V
@@ -76,7 +76,7 @@ The Sleuth Kit ver 4.12.1
 
 Your version number may be newer; any 4.x version works for this lab. If `which` prints nothing for a tool, the install failed: rerun Step 1.1 and read the error message.
 
-**Step 1.3 — Create a working folder.** Everything in the lab lives here.
+**Step 1.3 - Create a working folder.** Everything in the lab lives here.
 
 ```bash
 mkdir -p ~/tsk_lab && cd ~/tsk_lab
@@ -88,7 +88,7 @@ mkdir -p ~/tsk_lab && cd ~/tsk_lab
 
 You create a file that behaves exactly like a real disk: a partition table, one NTFS partition starting at sector 2048, and a file system you can mount. You are playing the suspect's drive here.
 
-**Step 2.1 — Create a blank 200 MB image.**
+**Step 2.1 - Create a blank 200 MB image.**
 
 ```bash
 dd if=/dev/zero of=evidence.dd bs=1M count=200 status=progress
@@ -98,7 +98,7 @@ dd if=/dev/zero of=evidence.dd bs=1M count=200 status=progress
 
 **Expected outcome:** `209715200 bytes (210 MB, 200 MiB) copied`. Check with `ls -l evidence.dd`.
 
-**Step 2.2 — Write a partition table and one partition.**
+**Step 2.2 - Write a partition table and one partition.**
 
 ```bash
 parted -s evidence.dd mklabel msdos mkpart primary ntfs 1MiB 100%
@@ -120,7 +120,7 @@ Number  Start  End      Size     Type     File system  Flags
 
 Remember 2048: TSK will rediscover this number in Part 5.
 
-**Step 2.3 — Attach the image as a loop device.** Linux needs a block device to format and mount the partition.
+**Step 2.3 - Attach the image as a loop device.** Linux needs a block device to format and mount the partition.
 
 ```bash
 LOOP=$(sudo losetup -fP --show evidence.dd)
@@ -132,7 +132,7 @@ ls ${LOOP}*
 
 **Expected outcome:** `/dev/loop0` followed by `/dev/loop0  /dev/loop0p1`. The number may differ (for example `loop1`); the `$LOOP` variable takes care of that. Keep this terminal open, because `$LOOP` exists only in this shell.
 
-**Step 2.4 — Format the partition as NTFS.**
+**Step 2.4 - Format the partition as NTFS.**
 
 ```bash
 sudo mkfs.ntfs -Q -L EVIDENCE ${LOOP}p1
@@ -142,7 +142,7 @@ sudo mkfs.ntfs -Q -L EVIDENCE ${LOOP}p1
 
 **Expected outcome:** ends with `mkntfs completed successfully. Have a nice day.`
 
-**Step 2.5 — Mount it.**
+**Step 2.5 - Mount it.**
 
 ```bash
 sudo mkdir -p /mnt/evidence
@@ -167,7 +167,7 @@ df -h /mnt/evidence
 
 A short Python script creates 9 realistic files: text, CSV, PDF, PNG, Word (.docx), HTML, JSON, ZIP, plus a `readme.txt` that will not be deleted (a control sample). It needs nothing beyond the Python that ships with Kali.
 
-**Step 3.1 — Create the generator script.** Copy the whole block into the terminal; the `EOF` lines must be included.
+**Step 3.1 - Create the generator script.** Copy the whole block into the terminal; the `EOF` lines must be included.
 
 ```bash
 cat > ~/tsk_lab/make_files.py << 'EOF'
@@ -247,7 +247,7 @@ print("Sample files created in", os.path.abspath(out))
 EOF
 ```
 
-**Step 3.2 — Run it against the mounted drive.**
+**Step 3.2 - Run it against the mounted drive.**
 
 ```bash
 sudo python3 ~/tsk_lab/make_files.py /mnt/evidence
@@ -274,7 +274,7 @@ drwxrwxrwx 1 root root    384 Confidential
 
 You can open them to check they are real: `xdg-open /mnt/evidence/report.pdf` or `xdg-open /mnt/evidence/photo.png`.
 
-**Step 3.3 — Confirm the file types by content, not by name.**
+**Step 3.3 - Confirm the file types by content, not by name.**
 
 ```bash
 cd /mnt/evidence && file $(find . -type f | sort)
@@ -296,7 +296,7 @@ cd /mnt/evidence && file $(find . -type f | sort)
 
 `file` reads the first bytes of each file (its "magic number", such as `%PDF` or `\x89PNG`). You will use this again after recovery to prove the recovered bytes are the right type.
 
-**Step 3.4 — Record the original hashes.** This is your ground truth for checking recovery later. The control file `readme.txt` is excluded because it will not be deleted.
+**Step 3.4 - Record the original hashes.** This is your ground truth for checking recovery later. The control file `readme.txt` is excluded because it will not be deleted.
 
 ```bash
 cd /mnt/evidence
@@ -325,7 +325,7 @@ Your hashes for `contract.docx` and `backup.zip` will differ from these, because
 
 The suspect now deletes everything except `readme.txt`, including the whole `Confidential` folder. Deleting on NTFS only marks the MFT entries and clusters as free; the bytes stay on disk until something overwrites them. That is why recovery is possible.
 
-**Step 4.1 — Delete the files.**
+**Step 4.1 - Delete the files.**
 
 ```bash
 cd /mnt/evidence
@@ -343,7 +343,7 @@ ls -la /mnt/evidence
 -rwxrwxrwx 1 root root   46 readme.txt
 ```
 
-**Step 4.2 — Unmount and detach.** From now on the image is evidence and must not be mounted again.
+**Step 4.2 - Unmount and detach.** From now on the image is evidence and must not be mounted again.
 
 ```bash
 cd ~/tsk_lab
@@ -354,7 +354,7 @@ losetup -a
 
 **Expected outcome:** no errors, and `losetup -a` no longer lists `evidence.dd`. If `umount` says "target is busy", you are still inside `/mnt/evidence`: run `cd ~/tsk_lab` and try again.
 
-**Step 4.3 — Hash the image (acquisition hash).**
+**Step 4.3 - Hash the image (acquisition hash).**
 
 ```bash
 sha256sum evidence.dd | tee evidence.dd.sha256
@@ -362,7 +362,7 @@ sha256sum evidence.dd | tee evidence.dd.sha256
 
 **Expected outcome:** one 64-character hash followed by `evidence.dd`. In a real case this hash is recorded when the drive is acquired, and it is rechecked at the end to prove the analysis did not change the evidence.
 
-**Step 4.4 — Make the image read-only.**
+**Step 4.4 - Make the image read-only.**
 
 ```bash
 chmod 444 evidence.dd
@@ -379,7 +379,7 @@ You are now the investigator. You received `evidence.dd` and its hash, and you k
 
 Work from `~/tsk_lab` for the rest of the lab. TSK reads the image directly, so none of these commands need sudo or mounting.
 
-**Step 5.1 — Verify the evidence before touching it.** Question: Is this the same image that was acquired?
+**Step 5.1 - Verify the evidence before touching it.** Question: Is this the same image that was acquired?
 
 ```bash
 cd ~/tsk_lab
@@ -388,7 +388,7 @@ sha256sum -c evidence.dd.sha256
 
 **Expected outcome:** `evidence.dd: OK`. If it says FAILED, stop: the evidence has changed and any result would be unreliable.
 
-**Step 5.2 — `img_stat`: what is this image?**
+**Step 5.2 - `img_stat`: what is this image?**
 
 ```bash
 img_stat evidence.dd
@@ -407,7 +407,7 @@ Sector size:    512
 
 What it means: a raw (dd) image of 209,715,200 bytes with 512-byte sectors, so 409,600 sectors in total. An E01 image would show `Image Type: ewf`. TSK reads both the same way.
 
-**Step 5.3 — `mmls`: how is the disk divided?**
+**Step 5.3 - `mmls`: how is the disk divided?**
 
 ```bash
 mmls evidence.dd
@@ -436,7 +436,7 @@ That Start value is the offset. Every file-system command from now on gets `-o 2
 
 > Try it: run `fsstat evidence.dd` without `-o`. TSK fails with a message like `Cannot determine file system type`, because sector 0 holds a partition table, not a file system.
 
-**Step 5.4 — `fsstat -t`: which file system?**
+**Step 5.4 - `fsstat -t`: which file system?**
 
 ```bash
 fsstat -t -o 2048 evidence.dd
@@ -444,7 +444,7 @@ fsstat -t -o 2048 evidence.dd
 
 **Expected outcome:** `ntfs`. The `-t` option prints only the type.
 
-**Step 5.5 — `fsstat`: how is the file system laid out?**
+**Step 5.5 - `fsstat`: how is the file system laid out?**
 
 ```bash
 fsstat -o 2048 evidence.dd | head -30
@@ -483,7 +483,7 @@ What it means:
 - **Range: 0 - 74** means this small volume has 75 MFT entries, so every file you look for has an address between 0 and 74.
 - A **cluster** (4,096 bytes = 8 sectors) is the smallest unit of file data.
 
-**Step 5.6 — `fls`: what files exist now?**
+**Step 5.6 - `fls`: what files exist now?**
 
 ```bash
 fls -o 2048 evidence.dd
@@ -518,7 +518,7 @@ How to read one line, using `-/r * 67-128-2: report.pdf`:
 
 Notice that `readme.txt` has no `*`: it is the allocated control file. The files inside `Confidential` are not shown yet because plain `fls` lists only the root folder.
 
-**Step 5.7 — `fls -r -d -p`: list every deleted file.**
+**Step 5.7 - `fls -r -d -p`: list every deleted file.**
 
 ```bash
 fls -r -d -p -o 2048 evidence.dd
@@ -558,7 +558,7 @@ The `OrphanFile-16` to `OrphanFile-23` lines are reserved, never-used MFT entrie
 | 71 | Confidential/contacts.json |
 | 72 | backup.zip |
 
-**Step 5.8 — `istat`: examine a deleted file's metadata.** Start with the PDF, entry 67.
+**Step 5.8 - `istat`: examine a deleted file's metadata.** Start with the PDF, entry 67.
 
 ```bash
 istat -o 2048 evidence.dd 67
@@ -626,7 +626,7 @@ ffind -o 2048 evidence.dd 67
 
 `icat` reads the content that an MFT entry points to and writes it to standard output; you redirect it into a new file. All 8 files were recovered with matching hashes in the test run.
 
-**Step 6.1 — Look at the content before saving it.** Start with the small text file. Nothing is written to disk yet; the content goes straight to the screen.
+**Step 6.1 - Look at the content before saving it.** Start with the small text file. Nothing is written to disk yet; the content goes straight to the screen.
 
 ```bash
 icat -r -o 2048 evidence.dd 65
@@ -642,7 +642,7 @@ Do not share.
 
 The "deleted" note is fully readable. `-r` switches on recovery mode, which tells `icat` to follow the data runs of an unallocated (deleted) entry. Never run `icat` on a binary file such as a PNG without redirecting it, because the raw bytes will garble the terminal.
 
-**Step 6.2 — See the raw cluster (optional).** In Step 5.8, `istat` showed that `report.pdf` lives in cluster 25984. Read that cluster directly with `blkcat`:
+**Step 6.2 - See the raw cluster (optional).** In Step 5.8, `istat` showed that `report.pdf` lives in cluster 25984. Read that cluster directly with `blkcat`:
 
 ```bash
 blkcat -o 2048 evidence.dd 25984 | head -c 120
@@ -659,7 +659,7 @@ blkcat -o 2048 evidence.dd 25984 | head -c 120
 
 The PDF signature `%PDF-1.4` sits right at the start of the cluster: the file's bytes are still on disk even though the file is "gone". Use your own cluster number if it was different.
 
-**Step 6.3 — Recover the PDF to a file.**
+**Step 6.3 - Recover the PDF to a file.**
 
 ```bash
 mkdir -p ~/tsk_lab/recovered
@@ -675,9 +675,9 @@ file recovered/report.pdf
 recovered/report.pdf: PDF document, version 1.4, 1 page(s)
 ```
 
-The size, 4,030 bytes, matches the `$DATA size: 4030` that `istat` reported. Open it with `xdg-open recovered/report.pdf` and you will see the "CONFIDENTIAL REPORT — Project Falcon" page.
+The size, 4,030 bytes, matches the `$DATA size: 4030` that `istat` reported. Open it with `xdg-open recovered/report.pdf` and you will see the "CONFIDENTIAL REPORT - Project Falcon" page.
 
-**Step 6.4 — Recover all the other files.** Run one `icat` per file, using the MFT entries from Step 5.7:
+**Step 6.4 - Recover all the other files.** Run one `icat` per file, using the MFT entries from Step 5.7:
 
 ```bash
 cd ~/tsk_lab
@@ -706,7 +706,7 @@ ls -l recovered
 
 Every size matches the original listing from Step 3.2. Note that `icat` needs only the MFT number, not the name: you chose the output file names yourself. The names came from `fls`.
 
-**Step 6.5 — Confirm the file types.**
+**Step 6.5 - Confirm the file types.**
 
 ```bash
 file recovered/*
@@ -727,7 +727,7 @@ recovered/secret.txt:    ASCII text
 
 This is identical to the Step 3.3 output, so the content is the right type, not just the right name. Open a few to see them: `xdg-open recovered/photo.png`, `unzip -l recovered/backup.zip`, `head recovered/passwords.csv`.
 
-**Step 6.6 — Prove the recovery with hashes.** The original hash list stores `Confidential/` paths, while the recovered folder is flat, so `sed` strips that folder name before the check:
+**Step 6.6 - Prove the recovery with hashes.** The original hash list stores `Confidential/` paths, while the recovered folder is flat, so `sed` strips that folder name before the check:
 
 ```bash
 cd ~/tsk_lab/recovered
@@ -760,7 +760,7 @@ sha256sum recovered/* | tee recovered_hashes.txt
 
 ## Part 7: Bulk recovery, timeline and final integrity check
 
-**Step 7.1 — `tsk_recover`: recover every deleted file in one command.** Part 6 recovered files one by one, which is how you work when you need specific items. `tsk_recover` does the same job for all deleted files at once and rebuilds the folder tree.
+**Step 7.1 - `tsk_recover`: recover every deleted file in one command.** Part 6 recovered files one by one, which is how you work when you need specific items. `tsk_recover` does the same job for all deleted files at once and rebuilds the folder tree.
 
 ```bash
 tsk_recover -o 2048 evidence.dd tsk_recovered
@@ -791,7 +791,7 @@ cd tsk_recovered && sha256sum -c ../original_hashes.txt && cd ..
 
 **Expected outcome:** the same 8 OK lines as Step 6.6.
 
-**Step 7.2 — Build a timeline with `fls -m` and `mactime`.** A timeline orders every file event by time, which is how investigators reconstruct what happened. It takes two commands: `fls -m` writes a "body file" with every timestamp, and `mactime` sorts it.
+**Step 7.2 - Build a timeline with `fls -m` and `mactime`.** A timeline orders every file event by time, which is how investigators reconstruct what happened. It takes two commands: `fls -m` writes a "body file" with every timestamp, and `mactime` sorts it.
 
 ```bash
 fls -r -m / -o 2048 evidence.dd > bodyfile.txt
@@ -817,7 +817,7 @@ Wed Oct 07 2026 16:55:02,48,m.c.,-/drwxrwxrwx,48,0,64-144-2,"/Confidential (dele
 
 How to read it: the Type column shows which timestamps fired at that moment: `m` modified, `a` accessed, `c` MFT changed, `b` born (created). All files were created at 16:54:58. The last line shows the `Confidential` folder modified and changed at 16:55:02, four seconds later: that is the moment its contents were deleted. You can open `timeline.csv` in LibreOffice Calc to sort and filter it. (Some Kali versions print a harmless `Old package separator` warning from `mactime`; ignore it.)
 
-**Step 7.3 — Prove the evidence was not changed.**
+**Step 7.3 - Prove the evidence was not changed.**
 
 ```bash
 sha256sum -c evidence.dd.sha256

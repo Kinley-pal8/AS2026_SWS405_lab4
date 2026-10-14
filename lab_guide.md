@@ -1,4 +1,4 @@
-# Understanding the TSK Lab — Plain-Language Guide
+# Understanding the TSK Lab - Plain-Language Guide
 
 I will explain your lab from the beginning in simple language, assuming you are new to Linux commands, loops, disk images, and digital forensics.
 
@@ -14,17 +14,17 @@ You do not need a real hard disk for this lab. Your Kali Linux computer creates 
 
 Think of the process as a real investigation involving a suspect's hard disk.
 
-- **Step 1: Create `evidence.dd`** — Create an empty 200 MiB file that will represent a hard disk.
-- **Step 2: Prepare the virtual disk** — Add a partition table, create an NTFS file system, and mount the partition.
-- **Step 3: Put files inside** — Create a PDF, image, text file, CSV, Word document, and other sample files.
-- **Step 4: Delete selected files** — Delete the files from the mounted partition, leaving `readme.txt`.
-- **Step 5: Preserve the image and investigate** — Use Sleuth Kit to identify deleted files and attempt to recover their contents.
+- **Step 1: Create `evidence.dd`** - Create an empty 200 MiB file that will represent a hard disk.
+- **Step 2: Prepare the virtual disk** - Add a partition table, create an NTFS file system, and mount the partition.
+- **Step 3: Put files inside** - Create a PDF, image, text file, CSV, Word document, and other sample files.
+- **Step 4: Delete selected files** - Delete the files from the mounted partition, leaving `readme.txt`.
+- **Step 5: Preserve the image and investigate** - Use Sleuth Kit to identify deleted files and attempt to recover their contents.
 
 The key idea is that you create the image first and investigate that very same image later. You do not create a new `evidence.dd` after deleting the files.
 
 ### The five steps at a glance
 
-**Step 1: Create evidence.dd** — Create an empty 200 MiB file that will represent a hard disk.
+**Step 1: Create evidence.dd** - Create an empty 200 MiB file that will represent a hard disk.
 
 ```bash
 dd if=/dev/zero of=evidence.dd bs=1M count=200
@@ -33,7 +33,7 @@ dd if=/dev/zero of=evidence.dd bs=1M count=200
 # 209715200 bytes (210 MB) copied, 0.XXX s, XXX MB/s
 ```
 
-**Step 2: Prepare the virtual disk** — Add a partition table, create an NTFS file system, and mount the partition.
+**Step 2: Prepare the virtual disk** - Add a partition table, create an NTFS file system, and mount the partition.
 
 ```bash
 sudo parted evidence.dd
@@ -47,7 +47,7 @@ sudo mount /dev/loop0p1 /mnt/evidence
 
 Partition layout: NTFS (≈ 199 MiB), mounted at `/mnt/evidence`.
 
-**Step 3: Put files inside** — Create a PDF, image, text file, CSV, Word document, and other sample files (`report.pdf`, `image.jpg`, `notes.txt`, `data.csv`, `document.docx`, `archive.zip`).
+**Step 3: Put files inside** - Create a PDF, image, text file, CSV, Word document, and other sample files (`report.pdf`, `image.jpg`, `notes.txt`, `data.csv`, `document.docx`, `archive.zip`).
 
 ```bash
 cd /mnt/evidence
@@ -56,7 +56,7 @@ echo "This is a sample file" > readme.txt
 touch report.pdf image.jpg notes.txt data.csv document.docx archive.zip
 ```
 
-**Step 4: Delete selected files** — Delete the files from the mounted partition, leaving `readme.txt`.
+**Step 4: Delete selected files** - Delete the files from the mounted partition, leaving `readme.txt`.
 
 ```bash
 cd /mnt/evidence
@@ -66,7 +66,7 @@ ls
 
 (`readme.txt` is kept; the rest are deleted.)
 
-**Step 5: Preserve the image and investigate** — Use Sleuth Kit to identify deleted files and attempt to recover their contents.
+**Step 5: Preserve the image and investigate** - Use Sleuth Kit to identify deleted files and attempt to recover their contents.
 
 ```bash
 fls evidence.dd
@@ -163,10 +163,10 @@ At this point, `evidence.dd` contains zeros. It does not yet contain your sample
 
 Your next commands prepare that file to behave like a disk.
 
-- `evidence.dd` — An ordinary file filled with zero bytes
-- **Partition table** — Records where the partition begins and ends
-- **NTFS file system** — Organizes directories, file names, metadata, and file data
-- Mounted at `/mnt/evidence` — You can now create, open, and delete files stored inside the image.
+- `evidence.dd` - An ordinary file filled with zero bytes
+- **Partition table** - Records where the partition begins and ends
+- **NTFS file system** - Organizes directories, file names, metadata, and file data
+- Mounted at `/mnt/evidence` - You can now create, open, and delete files stored inside the image.
 
 Your command for creating the partition table is:
 
@@ -592,10 +592,10 @@ The script builds the Word document using XML files stored in a ZIP-format packa
 
 The script also generates:
 
-- `notes.html` — an HTML page with 80 entries.
-- `contacts.json` — fictional contact records.
-- `backup.zip` — a ZIP archive containing `plan.txt`.
-- `readme.txt` — a control file that the lab deliberately keeps.
+- `notes.html` - an HTML page with 80 entries.
+- `contacts.json` - fictional contact records.
+- `backup.zip` - a ZIP archive containing `plan.txt`.
+- `readme.txt` - a control file that the lab deliberately keeps.
 
 After running the script, your structure should look like this:
 
